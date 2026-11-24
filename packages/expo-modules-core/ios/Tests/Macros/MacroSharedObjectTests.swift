@@ -824,15 +824,6 @@ private struct MacroSharedObjectTests {
     #expect(appContext.sharedObjectRegistry.size == 1)
   }
 
-  @Test
-  func `clearing the registry removes the listeners in the main runtime`() throws {
-    _ = try createCounter()
-    try runtime.eval("counter.addListener('change', () => {})")
-    #expect(try runtime.eval("counter.listenerCount('change')").asInt() == 1)
-    appContext.sharedObjectRegistry.clear()
-    #expect(try runtime.eval("counter.listenerCount('change')").asInt() == 0)
-  }
-
   /// Adds a listener to the counter in the main runtime, also as the `listener` global, and returns a weak reference
   /// to it.
   private func addListener() throws -> JavaScriptWeakObject.Ref {
@@ -865,26 +856,12 @@ private struct MacroSharedObjectTests {
   }
 
   @Test
-  func `clearing the registry removes a listener added after release() in the main runtime`() throws {
-    let id = try createCounter()
-    let attachedRuntime = try appContext.addRuntime()
-    try attachedRuntime.eval("attachedCounter = expo.SharedObject.__resolveInWorklet(\(id))")
-    // A frozen JS object keeps its native state after `release()`, so `addListener` still finds it.
-    try runtime.eval("Object.freeze(counter); counter.release()")
-    let listener = try addListener()
-    try runtime.eval("listener = undefined")
-    appContext.sharedObjectRegistry.clear()
-    #expect(try isCollected(listener))
-  }
-
-  @Test
-  func `clearing the registry removes the listeners of a shared object released in an attached runtime`() throws {
+  func `release() in an attached runtime removes the listeners in the main runtime`() throws {
     let id = try createCounter()
     let attachedRuntime = try appContext.addRuntime()
     let listener = try addListener()
     try attachedRuntime.eval("expo.SharedObject.__resolveInWorklet(\(id)).release()")
     try runtime.eval("listener = undefined")
-    appContext.sharedObjectRegistry.clear()
     #expect(try isCollected(listener))
   }
 

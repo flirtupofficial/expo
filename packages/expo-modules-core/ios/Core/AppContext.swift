@@ -660,7 +660,7 @@ public class AppContext: NSObject, EXAppContextProtocol, @unchecked Sendable {
 
     // Install `global.expo.SharedObject`.
     installer.installSharedObjectClass() { [weak sharedObjectRegistry] objectId in
-      sharedObjectRegistry?.release(objectId, inMainRuntime: isMainRuntime)
+      sharedObjectRegistry?.delete(objectId)
     }
 
     // Install `global.expo.SharedRef`.
